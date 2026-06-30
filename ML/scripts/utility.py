@@ -6,7 +6,9 @@ def vCol(vet):
      return vet.reshape((vet.size, 1))
 def getMu(D):
     return D.sum(axis=1)/D.shape[1]
-
+def getC(D):
+    DC=D-vCol(getMu(D))
+    return (DC @ DC.T) / D.shape[1]
 def compute_Sb_Sw(D, L):
     Sw=0
     Sb=0

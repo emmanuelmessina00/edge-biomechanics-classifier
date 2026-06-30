@@ -25,3 +25,28 @@ The effectiveness of the spatial manipulation architecture is demonstrable by an
 Conversely, visualizing the histogram of the projection onto the First Discriminant Direction (LD1) extracted by the LDA drastically changes the scenario: Fisher's Criterion forces the data to cluster into tight, tall, and spatially segregated peaks. This strong visual aggregation and separation confirm the successful creation of an optimal latent space, within which a simple Multiclass Logistic Regression will be able to draw linear decision boundaries with minimal computational effort.
 
 ![PCA vs LDA Histograms](images/PCA+LDA.png)
+
+### Inference Pipeline and Latent Space Mapping
+
+To ensure the rigorous evaluation of the models, the test set must undergo the exact same spatial transformations as the training set. It is critical to emphasize that the PCA and LDA matrices, as well as the global mean vector $\mu$, are not re-estimated on the test data; doing so would result in *data leakage* and a misaligned feature space, rendering the trained classifiers ineffective.
+
+The mapping process is performed as a rigid linear projection:
+1. **Centering:** The test dataset $X_{test}$ is centered by subtracting the mean vector $\mu$ extracted from the training set.
+2. **PCA Projection:** The centered test data is projected into the 20-dimensional subspace using the projection matrix $P$ learned during the training phase.
+3. **LDA Projection:** The PCA-transformed test data is further projected into the final 5-dimensional latent space using the discriminant matrix $W$ (Fisher directions) optimized on the training labels.
+
+This workflow guarantees that every physical movement—whether captured during the training phase or encountered as a new sample in the field—is mapped into the identical geometric coordinates, allowing the generative models to process the features with consistent semantic meaning.
+
+### Evaluation of Generative Classification Models
+
+Following the projection of the dataset into the optimized five-dimensional latent space, the architecture explores generative probabilistic models to establish the classification boundaries. The primary objective at this stage is to mathematically model the underlying probability distribution of each physical activity. To achieve this, three distinct variations of Gaussian classifiers were implemented: the standard Gaussian Multivariate, the Gaussian Naive Bayes, and the Gaussian Tied Covariance. The training phase is handled by specialized algorithmic functions, namely `train_Gaussian_multivariate`, `train_Gaussian_Naive_Bayes`, and `train_Gaussian_TiedCovariance`, which extract the specific centroids and covariance matrices for the different sensory distributions.
+
+The evaluation of the generative models on the unseen test set yielded insightful results regarding the spatial geometry of the data. The standard Gaussian Multivariate model achieved an accuracy of 85.20%. Surprisingly, the Gaussian Naive Bayes model, which naively assumes absolute statistical independence among the features by forcing a diagonal covariance matrix, slightly outperformed the former with an accuracy of 85.30%. This phenomenon mathematically validates the previous dimensionality reduction stage: the Linear Discriminant Analysis naturally projects the data onto optimized orthogonal axes, effectively decorrelating the features and rendering the Naive Bayes assumption highly accurate within the newly generated latent space.
+
+However, the most significant milestone for the Edge AI scope of this project is represented by the Gaussian Tied Covariance model, which reached the highest accuracy of 86.90%. By mathematically constraining all six physical activity classes to share a single, global covariance matrix, the algorithm successfully mitigated the risk of overfitting associated with the highly flexible quadratic boundaries of the full multivariate approach. This structural rigidity forces the decision boundaries to become perfectly linear hyperplanes. From an embedded systems perspective, this mathematical simplification is a tremendous engineering advantage. It drastically reduces both the memory footprint, as only one covariance matrix must be stored on the ESP32 flash memory instead of six, and the computational complexity, collapsing the heavy quadratic inference equation into a highly efficient linear dot product.
+
+| Generative Model | Decision Boundary | Accuracy on Test Set | 
+ | ----- | ----- | ----- | 
+| **Gaussian Multivariate** | Quadratic | 85.20% | 
+| **Gaussian Naive Bayes** | Quadratic (Diagonal) | 85.30% | 
+| **Gaussian Tied Covariance** | Linear | **86.90%** |
