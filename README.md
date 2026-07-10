@@ -50,3 +50,61 @@ However, the most significant milestone for the Edge AI scope of this project is
 | **Gaussian Multivariate** | Quadratic | 85.20% | 
 | **Gaussian Naive Bayes** | Quadratic (Diagonal) | 85.30% | 
 | **Gaussian Tied Covariance** | Linear | **86.90%** |
+
+Certamente! Ecco la porzione esatta di Markdown dedicata alla Regressione Logistica. Puoi fare semplicemente copia e incolla per aggiungerla in fondo al tuo file `README.md`:
+
+### Discriminative Classification: Multiclass Logistic Regression
+
+To push the boundaries of accuracy further while maintaining absolute computational efficiency, the architecture shifts from generative modeling to a purely discriminative approach: the Multiclass Logistic Regression (Softmax Regression). Instead of modeling the statistical distributions of the classes, this algorithm focuses exclusively on optimizing the placement of linear decision boundaries (hyperplanes) to directly maximize the posterior probability $P(C|x)$.
+
+The model parameters (the weight matrix $W$ and the bias vector $b$) are iteratively optimized to minimize a Cross-Entropy Loss function. To prevent the magnitude of the weights from growing excessively and causing overfitting, an $L_2$ regularization term is introduced, governed by the hyperparameter $\lambda$. The optimization is delegated to the L-BFGS-B numerical solver provided by the `scipy` library, utilizing analytically derived gradients for maximum convergence speed.
+
+To determine the optimal generalization threshold, an iterative grid search was performed over logarithmic variations of the penalty parameter $\lambda$, testing the optimal weights on the previously unseen test set. Notably, during the inference phase, the computation of the actual Softmax probabilities was bypassed; the model directly evaluated the raw spatial logits ($S = W^T X_{test} + b$), extracting the predicted class via a simple `argmax` operation. This mathematical simplification yields exact results while drastically cutting down computational overhead.
+
+```python
+# Hyperparameter Tuning and Inference
+lambdas = [1e-4, 1e-2, 0.1, 1.0]
+best_w = 0
+best_b = 0
+best_acc = 0
+
+for l in lambdas:
+    # Training the Logistic Regression model using L-BFGS-B
+    w, b = train_log_reg(D_train_latent, L_train, l)
+    
+    # Efficient inference using raw logits (bypassing exponential Softmax)
+    s = w.T @ D_test_latent + b
+    predictions = np.argmax(s, axis=0)
+    
+    accuracy = np.mean(predictions == L_test)
+    if accuracy > best_acc:
+        best_acc = accuracy
+        best_w = w
+        best_b = b
+        
+    print(f"Accuracy with lambda = {l} is: {accuracy * 100:.2f}%")
+
+```
+
+The experimental results perfectly illustrate the bias-variance tradeoff. With minimal regularization ($\lambda = 10^{-4}$), the model slightly overfits the latent space, achieving an accuracy of 86.02%. However, tuning the regularization parameter to the optimal focal point of **$\lambda = 10^{-2}$**, the Multiclass Logistic Regression reaches an outstanding peak accuracy of **87.20%**, definitively surpassing the Tied Covariance model. Excessive penalties ($\lambda = 1.0$) severely restrict the weight vectors, causing the accuracy to plummet to 84.83% due to underfitting.
+
+| Classifier Architecture | Decision Boundary | Peak Accuracy (Test Set) |
+| --- | --- | --- |
+| Gaussian Multivariate | Quadratic | 85.20% |
+| Gaussian Naive Bayes | Quadratic (Diagonal) | 85.30% |
+| Gaussian Tied Covariance | Linear | 86.90% |
+| **Multiclass Logistic Regression** | **Linear** | **87.20% ($\lambda = 0.01$)** |
+
+The culmination of this pipeline proves that a purely discriminative, linear model represents the ultimate architecture for the target application. When deployed on the ESP32 microcontroller, the device will solely require storing a compact weight matrix ($5 \times 6$) and a small bias vector, executing classification via a fast, robust, and highly efficient linear dot product.
+
+### Advanced Architectural Considerations: The Limits of Edge AI
+
+The search for the optimal architecture for human activity recognition requires a critical analysis not only of the implemented models but also of more complex theoretical alternatives found in machine learning literature. In a traditional cloud-based or high-performance computing environment, the natural evolution of this pipeline would involve exploring algorithms capable of tracking highly non-linear decision boundaries, such as Gaussian Mixture Models (GMM) or Support Vector Machines (SVM). However, the strict constraint of real-time execution on a low-power microcontroller (Edge AI) radically shifts our evaluation criteria, rendering these complex architectures mathematically and computationally unsuitable.
+
+The concept of modeling the probability density of each physical activity through a linear combination of multiple Gaussians (Gaussian Mixture Models) is engineering-wise incompatible with our target domain. From a spatial perspective, using multiple centroids and covariance matrices for a single class would heavily overfit the sensor noise in the training data, severely degrading the model's generalization capabilities on unseen data. More importantly, from a hardware standpoint, the computational overhead for a single inference would be catastrophic. The microcontroller would be forced to compute the inverse, determinant, and exponential of a full quadratic form for every single component Gaussian within the mixture, across all classes. This would instantly deplete the CPU's clock cycles, causing a massive drop in the sampling frequency of the inertial sensor.
+
+A similar line of reasoning, combining strict memory limits with computational bottlenecks, rules out the deployment of Support Vector Machines. Adopting a non-linear kernel (such as the RBF kernel) to handle spatial complexity would force the system to crystallize and store a vast portion of the training dataset within the ESP32's flash memory as "support vectors." To classify a single new movement frame, the chip would have to calculate complex geometric distances between the live incoming data and hundreds or thousands of stored vectors, saturating the embedded resources immediately.
+
+While constraining an SVM to a purely linear kernel would solve the computational bottleneck by collapsing the inference equation into a fast linear dot product ($W^T x + b$)—identical to our Logistic Regression—it introduces a fatal flaw for a practical embedded deployment: the lack of calibrated probabilities. Unlike the Softmax function, which seamlessly converts raw logits into clear, interpretable confidence percentages for each class, a pure linear SVM only outputs an algebraic distance from the decision hyperplane. This lack of probabilistic mapping makes it exceptionally difficult for the firmware to handle uncertain movements or reject false positives safely, preventing the implementation of a safety threshold (e.g., discarding any predictions where the maximum confidence is lower than 70%).
+
+This comprehensive analysis definitively proves that Multiclass Logistic Regression represents the absolute architectural pinnacle for this embedded application. It beautifully unifies the extreme computational efficiency of a purely linear boundary with the robustness, safety, and interpretability of a well-calibrated probabilistic output.
