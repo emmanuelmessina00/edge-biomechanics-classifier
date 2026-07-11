@@ -1,0 +1,15 @@
+[target.xtensa-esp32-none-elf]
+# Mantiene il flag --chip esp32 per evitare che espflash ti chieda quale chip usare ad ogni avvio
+runner = "espflash flash --monitor --chip esp32"
+# Percorso assoluto del linker che abbiamo testato con successo sul tuo terminale
+linker = "/home/emmanuelmessina00/.rustup/toolchains/esp/xtensa-esp-elf/esp-15.2.0_20250920/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc"
+rustflags = [
+  "-C", "link-arg=-nostartfiles",
+]
+
+[build]
+target = "xtensa-esp32-none-elf"
+
+[unstable]
+# Permette a Rust di ricompilare le librerie core e alloc per il target specifico dell'ESP32
+build-std = ["alloc", "core"]
