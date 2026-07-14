@@ -147,7 +147,7 @@ Ensure you have the [Rust Espressif toolchain](https://docs.espressif.com/projec
 
 2. **Setup**: Clone the repository and enter the firmware directory:
 ```bash
-git clone <your-repository-url>
+git clone git@github.com:emmanuelmessina00/edge-biomechanics-classifier.git
 cd edge-biomechanics-classifier/ESP32-Rust
 ```
 
