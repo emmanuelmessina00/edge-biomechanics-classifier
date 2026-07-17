@@ -63,8 +63,6 @@ However, the most significant milestone for the Edge AI scope of this project is
 | **Gaussian Naive Bayes** | Quadratic (Diagonal) | 85.30% | 
 | **Gaussian Tied Covariance** | Linear | **86.90%** |
 
-Certamente! Ecco la porzione esatta di Markdown dedicata alla Regressione Logistica. Puoi fare semplicemente copia e incolla per aggiungerla in fondo al tuo file `README.md`:
-
 ---
 
 ### Discriminative Classification: Multiclass Logistic Regression
@@ -139,7 +137,7 @@ The inference engine on the ESP32 is implemented in **Rust** using the `#[no_std
 
 #### How to build and run
 
-1. **Prerequisites**: A ESP32, you can buy it on [AliExpress](https://it.aliexpress.com/item/1005006456519790.html?spm=a2g0o.productlist.main.2.1c6dbYj8bYj81t&algo_pvid=48e66bce-09b3-4758-9965-09e4f9903585&algo_exp_id=48e66bce-09b3-4758-9965-09e4f9903585-1&pdp_ext_f=%7B%22order%22%3A%2225366%22%2C%22eval%22%3A%221%22%2C%22fromPage%22%3A%22search%22%7D&pdp_npi=6%40dis%21EUR%2112.63%213.79%21%21%2195.75%2128.73%21%40211b61bb17837893017002949e6454%2112000037265317360%21sea%21IT%210%21ABX%211%210%21n_tag%3A-29910%3Bd%3Ae374419c%3Bm03_new_user%3A-29895&curPageLogUid=hnx7MwLt4574&utparam-url=scene%3Asearch%7Cquery_from%3A%7Cx_object_id%3A1005006456519790%7C_p_origin_prod%3A) 
+1. **Prerequisites**: A ESP32, you can buy it on AliExpress 
 
 ![ESP32 image](images/esp32.png)
 
